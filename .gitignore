@@ -13,6 +13,12 @@
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 
+# This prevents Visual Studio temp files from breaking Git.
+.vs/
+bin/
+obj/
+*.user
+*.suo
 # Mono auto generated files
 mono_crash.*
 
