@@ -1,5 +1,59 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model IEnumerable<GLMS.Web.Models.ServiceRequest>
 @{
+    ViewData["Title"] = "Service Requests";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>🔧 Service Requests</h2>
+    <a asp-action="Create" class="btn btn-warning">➕ New Request</a>
+</div>
+
+<table class="table table-striped table-hover align-middle">
+    <thead class="table-dark">
+        <tr>
+            <th>#</th>
+            <th>Contract / Client</th>
+            <th>Description</th>
+            <th class="text-end">Cost (USD)</th>
+            <th class="text-end">Cost (ZAR)</th>
+            <th class="text-end">Rate Used</th>
+            <th>Status</th>
+            <th>Created</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var sr in Model)
+        {
+            <tr>
+                <td>@sr.Id</td>
+                <td>
+                    <span class="fw-semibold">@sr.Contract?.Client?.Name</span><br />
+                    <small class="text-muted">Contract #@sr.ContractId</small>
+                </td>
+                <td>@(sr.Description.Length > 60 ? sr.Description[..60] + "…" : sr.Description)</td>
+                <td class="text-end">$@sr.CostUsd.ToString("N2")</td>
+                <td class="text-end fw-semibold">R @sr.CostZar.ToString("N2")</td>
+                <td class="text-end text-muted small">@sr.ExchangeRateUsed.ToString("N4")</td>
+                <td>
+                    <span class="badge @(sr.Status == GLMS.Web.Models.ServiceRequestStatus.Completed ? "bg-success" :
+                                                                                              sr.Status == GLMS.Web.Models.ServiceRequestStatus.Cancelled ? "bg-danger" :
+                                                                                              sr.Status == GLMS.Web.Models.ServiceRequestStatus.InProgress ? "bg-primary" : "bg-warning text-dark")">
+                        @sr.Status
+                    </span>
+                </td>
+                <td>@sr.CreatedOn.ToString("dd MMM yyyy")</td>
+                <td class="text-end">
+                    <a asp-action="Details" asp-route-id="@sr.Id" class="btn btn-sm btn-outline-info">View</a>
+                    <a asp-action="Edit" asp-route-id="@sr.Id" class="btn btn-sm btn-outline-warning">Edit</a>
+                    <a asp-action="Delete" asp-route-id="@sr.Id" class="btn btn-sm btn-outline-danger">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">No service requests found.</div>
 }

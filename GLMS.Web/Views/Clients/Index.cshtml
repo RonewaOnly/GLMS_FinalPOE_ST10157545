@@ -1,5 +1,49 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model IEnumerable<GLMS.Web.Models.Client>
 @{
+    ViewData["Title"] = "Clients";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Clients</h2>
+    <a asp-action="Create" class="btn btn-primary">➕ New Client</a>
+</div>
+
+<table class="table table-striped table-hover align-middle">
+    <thead class="table-dark">
+        <tr>
+            <th>Name</th>
+            <th>Region</th>
+            <th>Contract Details</th>
+            <th>Contracts</th>
+            <th>Created</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var client in Model)
+        {
+            <tr>
+                <td class="fw-semibold">@client.Name</td>
+                <td>@client.Region</td>
+                <td>@client.ContractDetails</td>
+                <td>
+                    <span class="badge bg-secondary">@client.Contracts.Count</span>
+                </td>
+                <td>@client.CreatedOn.ToString("dd MMM yyyy")</td>
+                <td class="text-end">
+                    <a asp-action="Details" asp-route-id="@client.Id"
+                       class="btn btn-sm btn-outline-info">Details</a>
+                    <a asp-action="Edit" asp-route-id="@client.Id"
+                       class="btn btn-sm btn-outline-warning">Edit</a>
+                    <a asp-action="Delete" asp-route-id="@client.Id"
+                       class="btn btn-sm btn-outline-danger">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">No clients found. <a asp-action="Create">Add the first client.</a></div>
 }

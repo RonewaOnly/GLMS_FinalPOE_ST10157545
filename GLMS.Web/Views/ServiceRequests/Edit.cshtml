@@ -1,5 +1,98 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model GLMS.Web.Models.ViewModels.ServiceRequestFormViewModel
 @{
+    ViewData["Title"] = "Edit Service Request";
+}
+
+<h2>Edit Service Request #@Model.Id</h2>
+<hr />
+
+<div class="row">
+    <div class="col-md-7">
+        <form asp-action="Edit" method="post" id="srForm">
+            <input type="hidden" asp-for="Id" />
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+            @if (!string.IsNullOrEmpty(Model.ContractInfo))
+            {
+                <div class="alert alert-secondary py-2 mb-3">
+                    Contract: <strong>@Model.ContractInfo</strong>
+                </div>
+            }
+
+            <div class="mb-3">
+                <label asp-for="ContractId" class="form-label">Contract</label>
+                <select asp-for="ContractId" asp-items="Model.ContractList" class="form-select"></select>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Description" class="form-label"></label>
+                <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                <span asp-validation-for="Description" class="text-danger small"></span>
+            </div>
+
+            <div class="card border-success mb-3">
+                <div class="card-header bg-success text-white"> Currency Conversion (USD → ZAR)</div>
+                <div class="card-body">
+                    <div class="row align-items-end g-3">
+                        <div class="col-md-5">
+                            <label asp-for="CostUsd" class="form-label">Amount (USD)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input asp-for="CostUsd" id="costUsd" type="number" step="0.01" min="0.01" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="col-md-2 text-center">
+                            <span id="rateDisplay" class="badge bg-secondary">Rate: @Model.ExchangeRate.ToString("N4")</span>
+                        </div>
+                        <div class="col-md-5">
+                            <label asp-for="CostZar" class="form-label">Amount (ZAR)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">R</span>
+                                <input asp-for="CostZar" id="costZar" type="number" step="0.01" class="form-control bg-light" readonly />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <input type="hidden" asp-for="ExchangeRate" id="exchangeRateHidden" />
+
+            <div class="mb-3">
+                <label asp-for="Status" class="form-label"></label>
+                <select asp-for="Status"
+                        asp-items="Html.GetEnumSelectList<GLMS.Web.Models.ServiceRequestStatus>()"
+                        class="form-select"></select>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-warning">Update Request</button>
+                <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        let currentRate = @Model.ExchangeRate;
+        async function fetchRate() {
+            try {
+                const res = await fetch('/ServiceRequests/GetRate');
+                const data = await res.json();
+                if (data.rate > 0) {
+                    currentRate = data.rate;
+                    document.getElementById('rateDisplay').textContent = 'Rate: ' + currentRate.toFixed(4);
+                    document.getElementById('exchangeRateHidden').value = currentRate;
+                    recalculate();
+                }
+            } catch (e) {}
+        }
+        function recalculate() {
+            const usd = parseFloat(document.getElementById('costUsd').value) || 0;
+            document.getElementById('costZar').value = (usd * currentRate).toFixed(2);
+        }
+        document.getElementById('costUsd').addEventListener('input', recalculate);
+        fetchRate();
+    </script>
 }

@@ -1,5 +1,25 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model GLMS.Web.Models.ServiceRequest
 @{
+    ViewData["Title"] = "Delete Service Request";
 }
+
+<h2 class="text-danger">Delete Service Request</h2>
+<hr />
+<div class="alert alert-warning">
+    Are you sure you want to delete Service Request #@Model.Id?
+</div>
+
+<dl class="row">
+    <dt class="col-sm-3">Contract</dt>
+    <dd class="col-sm-9">#@Model.ContractId — @Model.Contract?.Client?.Name</dd>
+    <dt class="col-sm-3">Description</dt>
+    <dd class="col-sm-9">@Model.Description</dd>
+    <dt class="col-sm-3">Cost (ZAR)</dt>
+    <dd class="col-sm-9">R @Model.CostZar.ToString("N2")</dd>
+</dl>
+
+<form asp-action="Delete" method="post">
+    <input type="hidden" asp-for="Id" />
+    <button type="submit" class="btn btn-danger">Yes, Delete</button>
+    <a asp-action="Index" class="btn btn-outline-secondary ms-2">Cancel</a>
+</form>

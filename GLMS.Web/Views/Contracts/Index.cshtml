@@ -1,5 +1,98 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model GLMS.Web.Models.ViewModels.ContractFilterViewModel
 @{
+    ViewData["Title"] = "Contracts";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Contracts</h2>
+    <a asp-action="Create" class="btn btn-success">New Contract</a>
+</div>
+
+<!-- Search / Filter Panel -->
+<div class="card mb-4 border-primary">
+    <div class="card-header bg-primary text-white fw-semibold">Search & Filter</div>
+    <div class="card-body">
+        <form asp-action="Index" method="get">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label asp-for="StartDateFrom" class="form-label"></label>
+                    <input asp-for="StartDateFrom" type="date" class="form-control" />
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="StartDateTo" class="form-label"></label>
+                    <input asp-for="StartDateTo" type="date" class="form-control" />
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="Status" class="form-label">Status</label>
+                    <select asp-for="Status"
+                            asp-items="Html.GetEnumSelectList<GLMS.Web.Models.ContractStatus>()"
+                            class="form-select">
+                        <option value="">— All Statuses —</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary w-100">Search</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary w-100">Clear</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Results Table -->
+<table class="table table-striped table-hover align-middle">
+    <thead class="table-dark">
+        <tr>
+            <th>#</th>
+            <th>Client</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+            <th>Status</th>
+            <th>Service Level</th>
+            <th>Agreement</th>
+            <th>SRs</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var c in Model.Results)
+        {
+            <tr>
+                <td>@c.Id</td>
+                <td class="fw-semibold">@c.Client?.Name</td>
+                <td>@c.StartDate.ToString("dd MMM yyyy")</td>
+                <td>@c.EndDate.ToString("dd MMM yyyy")</td>
+                <td>
+                    <span class="badge @(c.Status == GLMS.Web.Models.ContractStatus.Active ? "bg-success" :
+                                                                                             c.Status == GLMS.Web.Models.ContractStatus.Expired ? "bg-danger" :
+                                                                                             c.Status == GLMS.Web.Models.ContractStatus.Draft ? "bg-secondary" : "bg-warning")">
+                        @c.Status
+                    </span>
+                </td>
+                <td>@c.ServiceLevel</td>
+                <td>
+                    @if (!string.IsNullOrEmpty(c.SignedAgreementPath))
+                    {
+                        <a asp-action="Download" asp-route-id="@c.Id"
+                           class="btn btn-sm btn-outline-dark">⬇ PDF</a>
+                    }
+                    else
+                    {
+                        <span class="text-muted small">None</span>
+                    }
+                </td>
+                <td><span class="badge bg-secondary">@c.ServiceRequests.Count</span></td>
+                <td class="text-end">
+                    <a asp-action="Details" asp-route-id="@c.Id" class="btn btn-sm btn-outline-info">View</a>
+                    <a asp-action="Edit" asp-route-id="@c.Id" class="btn btn-sm btn-outline-warning">Edit</a>
+                    <a asp-action="Delete" asp-route-id="@c.Id" class="btn btn-sm btn-outline-danger">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (!Model.Results.Any())
+{
+    <div class="alert alert-info">No contracts match your search criteria.</div>
 }

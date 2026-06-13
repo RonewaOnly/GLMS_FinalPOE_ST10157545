@@ -1,8 +1,56 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Dashboard";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Dashboard</h2>
+    <span class="text-muted small">TechMove Logistics — GLMS</span>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card text-white bg-primary h-100">
+            <div class="card-body">
+                <h5 class="card-title">Clients</h5>
+                <p class="display-4 fw-bold">@ViewBag.TotalClients</p>
+                <a asp-controller="Clients" asp-action="Index" class="text-white">View all →</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-success h-100">
+            <div class="card-body">
+                <h5 class="card-title">Active Contracts</h5>
+                <p class="display-4 fw-bold">@ViewBag.ActiveContracts</p>
+                <small>@ViewBag.TotalContracts total  |  @ViewBag.ExpiredContracts expired</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-warning h-100">
+            <div class="card-body">
+                <h5 class="card-title">Pending Service Requests</h5>
+                <p class="display-4 fw-bold">@ViewBag.PendingRequests</p>
+                <small>@ViewBag.TotalServiceRequests total requests</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-4">
+        <a asp-controller="Clients" asp-action="Create" class="btn btn-outline-primary w-100">
+            ➕ New Client
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a asp-controller="Contracts" asp-action="Create" class="btn btn-outline-success w-100">
+            📄 New Contract
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a asp-controller="ServiceRequests" asp-action="Create" class="btn btn-outline-warning w-100">
+            🔧 New Service Request
+        </a>
+    </div>
 </div>

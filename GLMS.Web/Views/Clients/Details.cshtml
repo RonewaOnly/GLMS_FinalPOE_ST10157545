@@ -1,5 +1,67 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model GLMS.Web.Models.Client
 @{
+    ViewData["Title"] = "Client Details";
 }
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>@Model.Name</h2>
+    <div class="d-flex gap-2">
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-warning">Edit</a>
+        <a asp-action="Index" class="btn btn-outline-secondary">Back</a>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-dark text-white">Client Information</div>
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">Name</dt>
+            <dd class="col-sm-9">@Model.Name</dd>
+
+            <dt class="col-sm-3">Region</dt>
+            <dd class="col-sm-9">@Model.Region</dd>
+
+            <dt class="col-sm-3">Contract Details</dt>
+            <dd class="col-sm-9">@Model.ContractDetails</dd>
+
+            <dt class="col-sm-3">Created On</dt>
+            <dd class="col-sm-9">@Model.CreatedOn.ToString("dd MMM yyyy")</dd>
+        </dl>
+    </div>
+</div>
+
+<h4>📄 Contracts (@Model.Contracts.Count)</h4>
+<table class="table table-sm table-bordered">
+    <thead class="table-secondary">
+        <tr>
+            <th>Status</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+            <th>Service Level</th>
+            <th>Service Requests</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var c in Model.Contracts)
+        {
+            <tr>
+                <td>
+                    <span class="badge @(c.Status == GLMS.Web.Models.ContractStatus.Active ? "bg-success" :
+                                                                                             c.Status == GLMS.Web.Models.ContractStatus.Expired ? "bg-danger" :
+                                                                                             c.Status == GLMS.Web.Models.ContractStatus.Draft ? "bg-secondary" : "bg-warning")">
+                        @c.Status
+                    </span>
+                </td>
+                <td>@c.StartDate.ToString("dd MMM yyyy")</td>
+                <td>@c.EndDate.ToString("dd MMM yyyy")</td>
+                <td>@c.ServiceLevel</td>
+                <td>@c.ServiceRequests.Count</td>
+                <td>
+                    <a asp-controller="Contracts" asp-action="Details" asp-route-id="@c.Id"
+                       class="btn btn-sm btn-outline-info">View</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

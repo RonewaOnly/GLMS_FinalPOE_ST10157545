@@ -1,5 +1,70 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model GLMS.Web.Models.ViewModels.ContractFormViewModel
 @{
+    ViewData["Title"] = "Edit Contract";
+}
+
+<h2>Edit Contract #@Model.Id</h2>
+<hr />
+
+<div class="row">
+    <div class="col-md-7">
+        <form asp-action="Edit" method="post" enctype="multipart/form-data">
+            <input type="hidden" asp-for="Id" />
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+            <div class="mb-3">
+                <label asp-for="ClientId" class="form-label">Client</label>
+                <select asp-for="ClientId" asp-items="Model.ClientList" class="form-select"></select>
+                <span asp-validation-for="ClientId" class="text-danger small"></span>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="StartDate" class="form-label"></label>
+                    <input asp-for="StartDate" type="date" class="form-control" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="EndDate" class="form-label"></label>
+                    <input asp-for="EndDate" type="date" class="form-control" />
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Status" class="form-label"></label>
+                <select asp-for="Status"
+                        asp-items="Html.GetEnumSelectList<GLMS.Web.Models.ContractStatus>()"
+                        class="form-select"></select>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="ServiceLevel" class="form-label"></label>
+                <input asp-for="ServiceLevel" class="form-control" />
+                <span asp-validation-for="ServiceLevel" class="text-danger small"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="SignedAgreement" class="form-label">
+                    Replace Signed Agreement
+                    <small class="text-muted">(leave blank to keep current)</small>
+                </label>
+                @if (!string.IsNullOrEmpty(Model.ExistingFileName))
+                {
+                    <div class="alert alert-secondary py-2 mb-2">
+                        📎 Current file: <strong>@Model.ExistingFileName</strong>
+                    </div>
+                }
+                <input asp-for="SignedAgreement" type="file" accept=".pdf" class="form-control" />
+                <span asp-validation-for="SignedAgreement" class="text-danger small"></span>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-warning">Update Contract</button>
+                <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
 }

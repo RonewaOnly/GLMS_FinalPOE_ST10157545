@@ -1,5 +1,23 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model GLMS.Web.Models.Client
 @{
+    ViewData["Title"] = "Delete Client";
 }
+
+<h2 class="text-danger">Delete Client</h2>
+<hr />
+<div class="alert alert-warning">Are you sure you want to delete <strong>@Model.Name</strong>?</div>
+
+<dl class="row">
+    <dt class="col-sm-3">Name</dt>
+    <dd class="col-sm-9">@Model.Name</dd>
+    <dt class="col-sm-3">Region</dt>
+    <dd class="col-sm-9">@Model.Region</dd>
+    <dt class="col-sm-3">Contracts</dt>
+    <dd class="col-sm-9">@Model.Contracts.Count (clients with contracts cannot be deleted)</dd>
+</dl>
+
+<form asp-action="Delete" method="post">
+    <input type="hidden" asp-for="Id" />
+    <button type="submit" class="btn btn-danger">Yes, Delete</button>
+    <a asp-action="Index" class="btn btn-outline-secondary ms-2">Cancel</a>
+</form>
