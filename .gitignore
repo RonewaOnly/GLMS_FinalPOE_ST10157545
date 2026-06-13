@@ -14,11 +14,15 @@
 *.userprefs
 
 # This prevents Visual Studio temp files from breaking Git.
-.vs/
-bin/
-obj/
+.env
+**/bin/
+**/obj/
+**/.vs/
 *.user
 *.suo
+.DS_Store
+
+
 # Mono auto generated files
 mono_crash.*
 
