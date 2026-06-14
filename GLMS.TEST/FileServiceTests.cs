@@ -13,96 +13,56 @@ namespace GLMS.TEST
 {
     public class FileServiceTests
     {
-
-        // Creates a mock IFormFile with a given filename and MIME type
-        private static IFormFile MakeFakeFile(string fileName, string contentType,
-            string content = "fake content")
+        private static IFormFile MakeFile(string name, string mime, string body = "data")
         {
-            var bytes = Encoding.UTF8.GetBytes(content);
+            var bytes = Encoding.UTF8.GetBytes(body);
             var stream = new MemoryStream(bytes);
-            var file = new Mock<IFormFile>();
-            file.Setup(f => f.FileName).Returns(fileName);
-            file.Setup(f => f.ContentType).Returns(contentType);
-            file.Setup(f => f.Length).Returns(bytes.Length);
-            file.Setup(f => f.CopyToAsync(It.IsAny<Stream>(), It.IsAny<CancellationToken>()))
-                .Returns((Stream target, CancellationToken _) =>
-                {
-                    stream.Position = 0;
-                    return stream.CopyToAsync(target);
-                });
-            return file.Object;
+            var mock = new Mock<IFormFile>();
+            mock.Setup(f => f.FileName).Returns(name);
+            mock.Setup(f => f.ContentType).Returns(mime);
+            mock.Setup(f => f.Length).Returns(bytes.Length);
+            mock.Setup(f => f.CopyToAsync(It.IsAny<Stream>(), default))
+                .Returns<Stream, CancellationToken>((s, _) => { stream.Position = 0; return stream.CopyToAsync(s); });
+            return mock.Object;
         }
-        // Build a FileService with a temp directory as wwwroot
-        private static FileService BuildService(out string tempRoot)
+
+
+        private static FileService BuildSvc(out string root)
         {
-            tempRoot = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-            Directory.CreateDirectory(tempRoot);
+            root = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+            Directory.CreateDirectory(root);
             var env = new Mock<Microsoft.AspNetCore.Hosting.IWebHostEnvironment>();
-            env.Setup(e => e.WebRootPath).Returns(tempRoot);
-            var logger = Mock.Of<ILogger<FileService>>();
-            return new FileService(env.Object, logger);
+            env.Setup(e => e.WebRootPath).Returns(root);
+            return new FileService(env.Object, Mock.Of<ILogger<FileService>>());
         }
+
+
         [Fact]
-        public async Task SaveAgreementAsync_ValidPdf_SavesFileAndReturnsPath()
+        public async Task ValidPdf_Saves()
         {
-            var svc = BuildService(out var root);
-            var file = MakeFakeFile("agreement.pdf", "application/pdf");
-            var (path, name) = await svc.SaveAgreementAsync(file);
+            var svc = BuildSvc(out var root);
+            var (path, name) = await svc.SaveAgreementAsync(MakeFile("a.pdf", "application/pdf"));
             Assert.EndsWith(".pdf", path);
-            Assert.Equal("agreement.pdf", name);
-            // Verify the file physically exists on disk
-            var fullPath = Path.Combine(root, path.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
-            Assert.True(File.Exists(fullPath));
+            Assert.Equal("a.pdf", name);
+            Assert.True(File.Exists(Path.Combine(root, path.TrimStart('/').Replace('/', Path.DirectorySeparatorChar))));
         }
         [Fact]
-        public async Task SaveAgreementAsync_ExeFile_ThrowsInvalidOperationException()
+        public async Task ExeFile_Throws() => await Assert.ThrowsAsync<InvalidOperationException>(() => BuildSvc(out _).SaveAgreementAsync(MakeFile("bad.exe", "application/octet-stream")));
+        [Fact] public async Task DocxFile_Throws() => await Assert.ThrowsAsync<InvalidOperationException>(() => BuildSvc(out _).SaveAgreementAsync(MakeFile("doc.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")));
+        [Fact] public async Task MimeSpoof_Throws() => await Assert.ThrowsAsync<InvalidOperationException>(() => BuildSvc(out _).SaveAgreementAsync(MakeFile("x.pdf", "application/octet-stream")));
+        [Fact] public async Task NullFile_Throws() => await Assert.ThrowsAsync<InvalidOperationException>(() => BuildSvc(out _).SaveAgreementAsync(null!));
+        [Fact]
+        public async Task TwoUploads_UniqueNames()
         {
-            var svc = BuildService(out _);
-            var file = MakeFakeFile("malware.exe", "application/octet-stream");
-            var ex = await Assert.ThrowsAsync<InvalidOperationException>(
-                () => svc.SaveAgreementAsync(file));
-            Assert.Contains(".exe", ex.Message);
+            var svc = BuildSvc(out _);
+            var (p1, _) = await svc.SaveAgreementAsync(MakeFile("a.pdf", "application/pdf", "A"));
+            var (p2, _) = await svc.SaveAgreementAsync(MakeFile("a.pdf", "application/pdf", "B"));
+            Assert.NotEqual(p1, p2);
         }
         [Fact]
-        public async Task SaveAgreementAsync_DocxFile_ThrowsInvalidOperationException()
+        public void Delete_RemovesFile()
         {
-            var svc = BuildService(out _);
-            var file = MakeFakeFile("contract.docx",
-                "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
-            await Assert.ThrowsAsync<InvalidOperationException>(
-                () => svc.SaveAgreementAsync(file));
-        }
-        [Fact]
-        public async Task SaveAgreementAsync_PdfExtensionButWrongMime_ThrowsInvalidOperationException()
-        {
-            // Attacker renames .exe to .pdf but MIME is still application/octet-stream
-            var svc = BuildService(out _);
-            var file = MakeFakeFile("notreally.pdf", "application/octet-stream");
-            await Assert.ThrowsAsync<InvalidOperationException>(
-                () => svc.SaveAgreementAsync(file));
-        }
-        [Fact]
-        public async Task SaveAgreementAsync_NullFile_ThrowsInvalidOperationException()
-        {
-            var svc = BuildService(out _);
-            await Assert.ThrowsAsync<InvalidOperationException>(
-                () => svc.SaveAgreementAsync(null!));
-        }
-        [Fact]
-        public async Task SaveAgreementAsync_TwoUploads_GenerateUniqueFileNames()
-        {
-            var svc = BuildService(out _);
-            var file1 = MakeFakeFile("agreement.pdf", "application/pdf", "content A");
-            var file2 = MakeFakeFile("agreement.pdf", "application/pdf", "content B");
-            var (path1, _) = await svc.SaveAgreementAsync(file1);
-            var (path2, _) = await svc.SaveAgreementAsync(file2);
-            Assert.NotEqual(path1, path2);
-        }
-        [Fact]
-        public void DeleteAgreement_ExistingFile_RemovesFromDisk()
-        {
-            var svc = BuildService(out var root);
-            // Create a dummy file to delete
+            var svc = BuildSvc(out var root);
             var rel = "/uploads/agreements/dummy.pdf";
             var full = Path.Combine(root, "uploads", "agreements", "dummy.pdf");
             Directory.CreateDirectory(Path.GetDirectoryName(full)!);

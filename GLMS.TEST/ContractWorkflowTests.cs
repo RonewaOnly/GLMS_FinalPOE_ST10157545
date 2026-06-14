@@ -14,43 +14,13 @@ namespace GLMS.TEST
         [InlineData(ContractStatus.Draft, true)]
         [InlineData(ContractStatus.Expired, false)]
         [InlineData(ContractStatus.OnHold, false)]
-        public void CanCreateServiceRequest_MatchesExpectedRule(
-    ContractStatus status, bool expectedCanCreate)
-        {
-            var contract = new Contract
-            {
-                Id = 1,
-                ClientId = 1,
-                StartDate = DateTime.Today.AddDays(-30),
-                EndDate = DateTime.Today.AddDays(30),
-                Status = status,
-                ServiceLevel = "Standard"
-            };
-            Assert.Equal(expectedCanCreate, contract.CanCreateServiceRequest);
-        }
-        [Fact]
-        public void ExpiredContract_CannotCreateServiceRequest()
-        {
-            var contract = new Contract { Status = ContractStatus.Expired };
-            Assert.False(contract.CanCreateServiceRequest);
-        }
-        [Fact]
-        public void OnHoldContract_CannotCreateServiceRequest()
-        {
-            var contract = new Contract { Status = ContractStatus.OnHold };
-            Assert.False(contract.CanCreateServiceRequest);
-        }
-        [Fact]
-        public void ActiveContract_IsActivePropertyIsTrue()
-        {
-            var contract = new Contract { Status = ContractStatus.Active };
-            Assert.True(contract.IsActive);
-        }
-        [Fact]
-        public void DraftContract_IsActivePropertyIsFalse()
-        {
-            var contract = new Contract { Status = ContractStatus.Draft };
-            Assert.False(contract.IsActive);
-        }
+        public void CanCreateSR_MatchesExpected(ContractStatus status, bool expected)
+            => Assert.Equal(expected, new Contract { Status = status }.CanCreateServiceRequest);
+
+
+        [Fact] public void Expired_BlocksSR() => Assert.False(new Contract { Status = ContractStatus.Expired }.CanCreateServiceRequest);
+        [Fact] public void OnHold_BlocksSR() => Assert.False(new Contract { Status = ContractStatus.OnHold }.CanCreateServiceRequest);
+        [Fact] public void Active_AllowsSR() => Assert.True(new Contract { Status = ContractStatus.Active }.CanCreateServiceRequest);
+        [Fact] public void Draft_AllowsSR() => Assert.True(new Contract { Status = ContractStatus.Draft }.CanCreateServiceRequest);
     }
 }

@@ -1,6 +1,317 @@
 @GLMS.API_HostAddress = http://localhost:5291
 
-GET {{GLMS.API_HostAddress}}/weatherforecast/
-Accept: application/json
+### ════════════════════════════════════════════════════════════════════════════
+###  AUTH
+### ════════════════════════════════════════════════════════════════════════════
 
-###
+
+### Login — returns JWT (8hr expiry). Default seed: admin / Admin@1234
+# @name login
+POST {{GLMS.API_HostAddress}/api/auth/login
+Content-Type: application/json
+
+
+{
+  "username": "admin",
+  "password": "Admin@1234"
+}
+
+
+### Capture the token from the login response for use in subsequent requests
+@authToken = {{login.response.body.token}}
+
+
+
+
+### ════════════════════════════════════════════════════════════════════════════
+###  DASHBOARD
+### ════════════════════════════════════════════════════════════════════════════
+
+
+### Get dashboard summary (aggregate counts) — No auth required
+GET {{GLMS.API_HostAddress}}/api/dashboard
+
+
+
+
+### ════════════════════════════════════════════════════════════════════════════
+###  CLIENTS
+### ════════════════════════════════════════════════════════════════════════════
+
+
+### Get all clients — No auth required
+GET {{GLMS.API_HostAddress}}/api/clients
+
+
+
+
+### Get a single client by ID — No auth required
+GET {{GLMS.API_HostAddress}}/api/clients/1
+
+
+
+
+### Create a new client — Requires JWT
+# @name createClient
+POST {{GLMS.API_HostAddress}}/api/clients
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+
+{
+  "name": "Northbound Carriers Ltd",
+  "contractDetails": "Cross-border road freight",
+  "region": "EMEA"
+}
+
+
+
+
+### Update an existing client — Requires JWT
+PUT {{GLMS.API_HostAddress}}/api/clients/1
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+
+{
+  "name": "Acme Freight Ltd",
+  "contractDetails": "Air & sea freight — updated",
+  "region": "EMEA"
+}
+
+
+
+
+### Delete a client (only if it has no contracts) — Requires JWT
+DELETE {{GLMS.API_HostAddress}}/api/clients/99
+Authorization: Bearer {{authToken}}
+
+
+
+
+### ════════════════════════════════════════════════════════════════════════════
+###  CONTRACTS
+### ════════════════════════════════════════════════════════════════════════════
+
+
+### Get all contracts (no filters) — No auth required
+GET {{GLMS.API_HostAddress}}/api/contracts
+
+
+
+
+### Get contracts filtered by status — No auth required
+GET {{GLMS.API_HostAddress}}/api/contracts?status=Active
+
+
+
+
+### Get contracts filtered by date range — No auth required
+GET {{GLMS.API_HostAddress}}/api/contracts?from=2024-01-01&to=2024-12-31
+
+
+
+
+### Get contracts filtered by status AND date range — No auth required
+GET {{GLMS.API_HostAddress}}/api/contracts?status=Active&from=2024-01-01&to=2024-12-31
+
+
+
+
+### Get a single contract by ID (includes service requests) — No auth required
+GET {{GLMS.API_HostAddress}}/api/contracts/1
+
+
+
+
+### Create a new contract — Requires JWT
+# @name createContract
+POST {{GLMS.API_HostAddress}}/api/contracts
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+
+{
+  "clientId": 1,
+  "startDate": "2026-01-01",
+  "endDate": "2027-01-01",
+  "status": "Draft",
+  "serviceLevel": "Priority 2 — 8-hour response"
+}
+
+
+
+
+### Update all fields of an existing contract — Requires JWT
+PUT {{GLMS.API_HostAddress}}/api/contracts/1
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+
+{
+  "clientId": 1,
+  "startDate": "2024-01-01",
+  "endDate": "2025-01-01",
+  "status": "Active",
+  "serviceLevel": "Priority 1 — 4-hour response (updated)"
+}
+
+
+
+
+### Update ONLY the status of a contract (approve/decline/expire/hold) — Requires JWT
+PATCH {{GLMS.API_HostAddress}}/api/contracts/1/status
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+
+{
+  "status": "Active"
+}
+
+
+
+
+### Upload a signed PDF agreement for a contract — Requires JWT
+# NOTE: Adjust the file path below to a real PDF on your machine before sending.
+POST {{GLMS.API_HostAddress}}/api/contracts/1/agreement
+Authorization: Bearer {{authToken}}
+Content-Type: multipart/form-data; boundary=----GlmsBoundary
+
+
+----GlmsBoundary
+Content-Disposition: form-data; name="file"; filename="signed-agreement.pdf"
+Content-Type: application/pdf
+
+
+< ./sample-files/signed-agreement.pdf
+----GlmsBoundary--
+
+
+
+
+### Download the signed agreement PDF for a contract — No auth required
+GET {{GLMS.API_HostAddress}}/api/contracts/1/agreement
+
+
+
+
+### Delete a contract and its agreement file — Requires JWT
+DELETE {{GLMS.API_HostAddress}}/api/contracts/99
+Authorization: Bearer {{authToken}}
+
+
+
+
+### ════════════════════════════════════════════════════════════════════════════
+###  SERVICE REQUESTS
+### ════════════════════════════════════════════════════════════════════════════
+
+
+### Get all service requests — No auth required
+GET {{GLMS.API_HostAddress}}/api/servicerequests
+
+
+
+
+### Get a single service request by ID — No auth required
+GET {{GLMS.API_HostAddress}}/api/servicerequests/1
+
+
+
+
+### Create a new service request — Requires JWT
+### Validates that the parent contract is Active or Draft, then converts USD → ZAR
+# @name createServiceRequest
+POST {{GLMS.API_HostAddress}}/api/servicerequests
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+
+{
+  "contractId": 1,
+  "description": "Emergency container re-routing — Durban to Cape Town",
+  "costUsd": 750.00
+}
+
+
+
+
+### Update the status of a service request — Requires JWT
+PATCH {{GLMS.API_HostAddress}}/api/servicerequests/1/status
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+
+{
+  "status": "InProgress"
+}
+
+
+
+
+### Delete a service request — Requires JWT
+DELETE {{GLMS.API_HostAddress}}/api/servicerequests/99
+Authorization: Bearer {{authToken}}
+
+
+
+
+### ════════════════════════════════════════════════════════════════════════════
+###  CURRENCY
+### ════════════════════════════════════════════════════════════════════════════
+
+
+### Get the current live USD to ZAR exchange rate — No auth required
+GET {{GLMS.API_HostAddress}}/api/currency/rate
+
+
+
+
+### ════════════════════════════════════════════════════════════════════════════
+###  NEGATIVE / VALIDATION TESTS
+###  Useful for confirming workflow rules and auth enforcement.
+### ════════════════════════════════════════════════════════════════════════════
+
+
+### Should return 401 — no Authorization header on a JWT-protected endpoint
+POST {{GLMS.API_HostAddress}}/api/clients
+Content-Type: application/json
+
+
+{
+  "name": "Should Fail",
+  "contractDetails": "No token provided",
+  "region": "ZA"
+}
+
+
+
+
+### Should return 400 — cannot create a service request on an Expired contract
+### (Assumes contract #2 in seed data has Status = Expired)
+POST {{GLMS.API_HostAddress}}/api/servicerequests
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+
+{
+  "contractId": 2,
+  "description": "Should be rejected — contract is Expired",
+  "costUsd": 100.00
+}
+
+
+
+
+### Should return 401 — invalid login credentials
+POST {{GLMS.API_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+
+{
+  "username": "admin",
+  "password": "WrongPassword123"
+}
+
+
