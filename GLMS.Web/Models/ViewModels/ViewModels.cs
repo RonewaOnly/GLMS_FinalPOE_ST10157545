@@ -75,4 +75,7 @@ namespace GLMS.Web.Models.ViewModels
         public string? Base { get; set; }
         public Dictionary<string, decimal> Rates { get; set; } = new();
     }
+
+    public class DashboardDto { public int TotalClients { get; set; } public int TotalContracts { get; set; } public int ActiveContracts { get; set; } public int ExpiredContracts { get; set; } public int TotalServiceRequests { get; set; } public int PendingRequests { get; set; } }
+
 }

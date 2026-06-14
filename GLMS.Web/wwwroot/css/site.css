@@ -1,31 +1,77 @@
-html {
-  font-size: 14px;
-}
-
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
-}
-
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
-}
-
 body {
-  margin-bottom: 60px;
+    background: #f8f9fa;
+    font-size: .92rem;
 }
 
-.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
-  color: var(--bs-secondary-color);
-  text-align: end;
+.navbar-brand {
+    font-size: 1.3rem;
+    letter-spacing: .03em;
 }
 
-.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
-  text-align: start;
+h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #212529;
+}
+
+.card-header {
+    font-weight: 600;
+}
+
+.table th {
+    font-size: .82rem;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+.badge {
+    font-size: .75rem;
+    padding: .35em .65em;
+}
+
+.card .display-4 {
+    font-size: 2.8rem;
+    font-weight: 700;
+}
+
+.alert {
+    border-left: 4px solid;
+    border-radius: .375rem;
+}
+
+.alert-success {
+    border-left-color: #198754;
+}
+
+.alert-danger {
+    border-left-color: #dc3545;
+}
+
+.alert-info {
+    border-left-color: #0dcaf0;
+}
+
+.alert-warning {
+    border-left-color: #ffc107;
+}
+
+input[readonly].form-control {
+    background: #f0fff4;
+    border-color: #198754;
+    color: #0a3622;
+    font-weight: 600;
+}
+
+footer {
+    border-top: 1px solid #dee2e6;
+    font-size: .8rem;
+}
+
+.form-label {
+    font-weight: 500;
+    margin-bottom: .3rem;
 }

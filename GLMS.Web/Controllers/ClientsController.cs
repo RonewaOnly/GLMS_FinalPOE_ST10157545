@@ -1,102 +1,40 @@
-﻿using GLMS.Web.Data;
+﻿using GLMS.API.Models.DTOs;
+using GLMS.Web.Data;
 using GLMS.Web.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using GLMS.Web.Services;
 
 namespace GLMS.Web.Controllers
 {
     public class ClientsController : Controller
     {
-        private readonly ApplicationDbContext _context;
-        public ClientsController(ApplicationDbContext context)
+        private readonly ApiClient _api;
+        public ClientsController(ApiClient api) => _api = api;
+        public async Task<IActionResult> Index() => View(await _api.GetAsync<List<ClientDto>>("api/clients") ?? new());
+        public async Task<IActionResult> Details(int id) { var c = await _api.GetAsync<ClientDto>($"api/clients/{id}"); if (c == null) return NotFound(); return View(c); }
+        [HttpGet] public IActionResult Create() => View(new ClientDto());
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(ClientDto vm)
         {
-            _context = context;
-        }
-        // GET: /Clients
-        public async Task<IActionResult> Index()
-        {
-            var clients = await _context.Clients
-                .Include(c => c.Contracts)
-                .OrderBy(c => c.Name)
-                .ToListAsync();
-            return View(clients);
-        }
-        // GET: /Clients/Details/5
-        public async Task<IActionResult> Details(int id)
-        {
-            var client = await _context.Clients
-                .Include(c => c.Contracts)
-                    .ThenInclude(ct => ct.ServiceRequests)
-                .FirstOrDefaultAsync(c => c.Id == id);
-            if (client == null) return NotFound();
-            return View(client);
-        }
-        // GET: /Clients/Create
-        public IActionResult Create() => View();
-        // POST: /Clients/Create
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Client client)
-        {
-            if (!ModelState.IsValid) return View(client);
-            client.CreatedOn = DateTime.UtcNow;
-            _context.Clients.Add(client);
-            await _context.SaveChangesAsync();
-            TempData["Success"] = $"Client '{client.Name}' created successfully.";
+            if (!ModelState.IsValid) return View(vm);
+            var (ok, _, err) = await _api.PostAsync<ClientDto>("api/clients", new { vm.Name, vm.ContractDetails, vm.Region });
+            if (!ok) { ModelState.AddModelError("", err ?? "Error."); return View(vm); }
+            TempData["Success"] = $"Client '{vm.Name}' created.";
             return RedirectToAction(nameof(Index));
         }
-        // GET: /Clients/Edit/5
-        public async Task<IActionResult> Edit(int id)
+        [HttpGet] public async Task<IActionResult> Edit(int id) { var c = await _api.GetAsync<ClientDto>($"api/clients/{id}"); if (c == null) return NotFound(); return View(c); }
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, ClientDto vm)
         {
-            var client = await _context.Clients.FindAsync(id);
-            if (client == null) return NotFound();
-            return View(client);
+            if (!ModelState.IsValid) return View(vm);
+            var (ok, err) = await _api.PutAsync($"api/clients/{id}", new { vm.Name, vm.ContractDetails, vm.Region });
+            if (!ok) { ModelState.AddModelError("", err ?? "Update failed."); return View(vm); }
+            TempData["Success"] = "Client updated."; return RedirectToAction(nameof(Index));
         }
-        // POST: /Clients/Edit/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, Client client)
-        {
-            if (id != client.Id) return BadRequest();
-            if (!ModelState.IsValid) return View(client);
-            try
-            {
-                _context.Update(client);
-                await _context.SaveChangesAsync();
-                TempData["Success"] = "Client updated successfully.";
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!_context.Clients.Any(c => c.Id == id)) return NotFound();
-                throw;
-            }
-            return RedirectToAction(nameof(Index));
-        }
-        // GET: /Clients/Delete/5
-        public async Task<IActionResult> Delete(int id)
-        {
-            var client = await _context.Clients
-                .Include(c => c.Contracts)
-                .FirstOrDefaultAsync(c => c.Id == id);
-            if (client == null) return NotFound();
-            return View(client);
-        }
-        // POST: /Clients/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var client = await _context.Clients.FindAsync(id);
-            if (client == null) return NotFound();
-            if (_context.Contracts.Any(c => c.ClientId == id))
-            {
-                TempData["Error"] = "Cannot delete a client that has existing contracts.";
-                return RedirectToAction(nameof(Index));
-            }
-            _context.Clients.Remove(client);
-            await _context.SaveChangesAsync();
-            TempData["Success"] = "Client deleted.";
-            return RedirectToAction(nameof(Index));
-        }
+        [HttpGet] public async Task<IActionResult> Delete(int id) { var c = await _api.GetAsync<ClientDto>($"api/clients/{id}"); if (c == null) return NotFound(); return View(c); }
+        [HttpPost, ActionName("Delete"), ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id) { var ok = await _api.DeleteAsync($"api/clients/{id}"); TempData[ok ? "Success" : "Error"] = ok ? "Client deleted." : "Cannot delete — client has contracts."; return RedirectToAction(nameof(Index)); }
+
     }
 }
