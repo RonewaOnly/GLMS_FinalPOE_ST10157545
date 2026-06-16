@@ -1,0 +1,173 @@
+version: '3.9'
+
+# ═══════════════════════════════════════════════════════════════════════════════
+#  GLMS — Docker Compose
+#
+#  Services:
+#   1. sqlserver        — SQL Server 2019 (database)
+#   2. glms.api         — ASP.NET Core Web API  (connects to sqlserver)
+#   3. glms.web         — ASP.NET Core MVC      (connects to glms.api only)
+#   4. glms.tests       — xUnit test runner      (runs against glms.api)
+#
+#  Quick start:
+#   docker compose up --build          start everything
+#   docker compose up --build glms.api start only API + its dependencies
+#   docker compose down -v             stop and wipe all volumes (full reset)
+#
+#  Connect with SSMS / Azure Data Studio:
+#   Server:   localhost,1433
+#   Login:    sa
+#   Password: YourStrong!Passw0rd
+# ═══════════════════════════════════════════════════════════════════════════════
+
+services:
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # 1. SQL SERVER 2019
+  #    Free Express edition — no licence needed for development.
+  #    Data is persisted in the named volume so the DB survives restarts.
+  # ───────────────────────────────────────────────────────────────────────────
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    container_name: glms-sqlserver
+    restart: unless-stopped
+    environment:
+      SA_PASSWORD:  "YourStrong!Passw0rd"
+      ACCEPT_EULA:  "Y"
+      MSSQL_PID:    "Express"
+    ports:
+      - "1433:1433"                          # exposed so SSMS / ADS can connect
+    volumes:
+      - sqlserver_data:/var/opt/mssql        # persist database files
+    networks:
+      - glms-network
+    healthcheck:
+      # Waits until SQL Server is actually accepting TCP connections.
+      # The API will not start until this check passes.
+      test: >
+        /opt/mssql-tools/bin/sqlcmd
+        -S localhost -U sa -P "YourStrong!Passw0rd"
+        -Q "SELECT 1" -b -o /dev/null
+      interval:     10s
+      timeout:      5s
+      retries:      12
+      start_period: 30s
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # 2. GLMS WEB API
+  #    The only service that talks to SQL Server.
+  #    EF Core migrations are applied automatically on startup.
+  #    Swagger UI served at http://localhost:8080
+  # ───────────────────────────────────────────────────────────────────────────
+  glms.api:
+    image: ${DOCKER_REGISTRY-}glmsapi
+    container_name: glms-api
+    restart: unless-stopped
+    build:
+      context:    .
+      dockerfile: GLMS.API/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Docker"
+      ASPNETCORE_URLS:        "http://+:8080"
+
+      # Uses Docker service name "sqlserver" — NOT localhost
+      ConnectionStrings__DefaultConnection: >-
+        Server=sqlserver,1433;
+        Database=GLMS_DB;
+        User Id=sa;
+        Password=YourStrong!Passw0rd;
+        TrustServerCertificate=True;
+        MultipleActiveResultSets=True;
+
+      Jwt__Key:      "GLMS-SuperSecret-JWT-Key-TechMove-2026!@#$"
+      Jwt__Issuer:   "glms-api"
+      Jwt__Audience: "glms-clients"
+    ports:
+      - "8080:8080"
+    volumes:
+      - agreements_data:/app/wwwroot/uploads/agreements
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    networks:
+      - glms-network
+    healthcheck:
+      test: >
+        curl --fail --silent
+        http://localhost:8080/api/dashboard || exit 1
+      interval:     15s
+      timeout:      5s
+      retries:      5
+      start_period: 20s
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # 3. GLMS MVC WEB FRONTEND
+  #    No database connection — calls glms.api via HttpClient only.
+  #    UI available at http://localhost:5000
+  # ───────────────────────────────────────────────────────────────────────────
+  glms.web:
+    image: ${DOCKER_REGISTRY-}glmsweb
+    container_name: glms-web
+    restart: unless-stopped
+    build:
+      context:    .
+      dockerfile: GLMS.Web/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Production"
+      ASPNETCORE_URLS:        "http://+:5000"
+      ApiBaseUrl:             "http://glms.api:8080"
+    ports:
+      - "5000:5000"
+    depends_on:
+      glms.api:
+        condition: service_healthy
+    networks:
+      - glms-network
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # 4. TEST RUNNER
+  #    Runs all xUnit tests then exits (restart: no).
+  #    Unit tests use EF InMemory. Integration tests hit glms.api directly.
+  #    Run tests only:  docker compose run --rm glms.tests
+  # ───────────────────────────────────────────────────────────────────────────
+  glms.tests:
+    image: ${DOCKER_REGISTRY-}glmstests
+    container_name: glms-tests
+    build:
+      context:    .
+      dockerfile: GLMS.TEST/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Testing"
+      ApiBaseUrl:             "http://glms.api:8080"
+      ConnectionStrings__DefaultConnection: >-
+        Server=sqlserver,1433;
+        Database=GLMS_DB;
+        User Id=sa;
+        Password=YourStrong!Passw0rd;
+        TrustServerCertificate=True;
+        MultipleActiveResultSets=True;
+    depends_on:
+      glms.api:
+        condition: service_healthy
+    networks:
+      - glms-network
+    restart: "no"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+#  VOLUMES
+# ═══════════════════════════════════════════════════════════════════════════════
+volumes:
+  sqlserver_data:
+    name: glms_sqlserver_data
+  agreements_data:
+    name: glms_agreements_data
+
+# ═══════════════════════════════════════════════════════════════════════════════
+#  NETWORK
+#  Single internal bridge network — containers address each other by service name.
+#  e.g. the API uses "sqlserver:1433", the web uses "glms.api:8080"
+# ═══════════════════════════════════════════════════════════════════════════════
+networks:
+  glms-network:
+    name:   glms-network
+    driver: bridge
