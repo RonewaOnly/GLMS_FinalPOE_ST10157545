@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "GLMS.TEST": {
+      "commandName": "Project"
+    },
+    "Container (Dockerfile)": {
+      "commandName": "Docker"
+    }
+  }
+}
