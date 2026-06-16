@@ -10,7 +10,6 @@ namespace GLMS.API.Controllers
         /// <summary>Manage logistics clients.</summary>
         [ApiController]
         [Route("api/[controller]")]
-        [Authorize]
         public class ClientsController : ControllerBase
         {
             private readonly ApplicationDbAPIContext _db;

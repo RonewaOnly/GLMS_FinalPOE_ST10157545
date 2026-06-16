@@ -94,6 +94,11 @@ builder.Services.AddAuthorization();
 #region Services
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IFileService, FileService>();
+builder.Services.AddHttpClient<ICurrencyService, CurrencyService>();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+
 #endregion
 
 #region CORS
@@ -123,12 +128,12 @@ var app = builder.Build();
 
 #region Middleware Pipeline
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
 
+app.UseSwagger();
+app.UseSwaggerUI();
+
+//app.UseDefaultFiles();
+//app.UseStaticFiles();
 //app.UseHttpsRedirection();
 
 app.UseRouting(); // 🔴 important explicit routing
@@ -140,12 +145,15 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+
+
 #endregion
 
 #region Auto Migration (SAFE VERSION)
 if (app.Environment.IsDevelopment())
 {
     using var scope = app.Services.CreateScope();
+
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbAPIContext>();
     db.Database.Migrate();
 }

@@ -371,3 +371,8 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/.dockerignore
+/.gitignore
+/docker-compose.dcproj
+/docker-compose.override.yml
+/docker-compose.yml

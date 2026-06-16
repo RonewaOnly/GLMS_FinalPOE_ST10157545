@@ -13,7 +13,6 @@ namespace GLMS.API.Controllers
         /// <summary>Manage freight contracts, PDF agreements and status transitions.</summary>
         [ApiController]
         [Route("api/[controller]")]
-        [Authorize]
         public class ContractsController : ControllerBase
         {
             private readonly ApplicationDbAPIContext _db;

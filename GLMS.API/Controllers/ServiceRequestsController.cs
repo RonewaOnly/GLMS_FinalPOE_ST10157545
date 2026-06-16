@@ -12,7 +12,7 @@ namespace GLMS.API.Controllers
 
 
         /// <summary>Service requests linked to active contracts.</summary>
-        [ApiController, Route("api/[controller]"), Authorize]
+        [ApiController, Route("api/[controller]")]
         public class ServiceRequestsController : ControllerBase
         {
             private readonly ApplicationDbAPIContext _db;
