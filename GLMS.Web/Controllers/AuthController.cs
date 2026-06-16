@@ -1,9 +1,10 @@
-﻿using GLMS.API.Models.DTOs;
+﻿using GLMS.Shared.Models.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using GLMS.Web.Services;
 
 namespace GLMS.Web.Controllers
 {
+
     public class AuthController : Controller
     {
         private readonly ApiClient _api;

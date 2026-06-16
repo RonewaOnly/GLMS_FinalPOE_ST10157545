@@ -25,7 +25,7 @@
                 <div class="col-md-3">
                     <label asp-for="Status" class="form-label">Status</label>
                     <select asp-for="Status"
-                            asp-items="Html.GetEnumSelectList<GLMS.Web.Models.ContractStatus>()"
+                            asp-items="Html.GetEnumSelectList<GLMS.Shared.Models.ContractStatus>()"
                             class="form-select">
                         <option value="">— All Statuses —</option>
                     </select>
@@ -63,9 +63,9 @@
                 <td>@c.StartDate.ToString("dd MMM yyyy")</td>
                 <td>@c.EndDate.ToString("dd MMM yyyy")</td>
                 <td>
-                    <span class="badge @(c.Status == GLMS.Web.Models.ContractStatus.Active ? "bg-success" :
-                                                                                             c.Status == GLMS.Web.Models.ContractStatus.Expired ? "bg-danger" :
-                                                                                             c.Status == GLMS.Web.Models.ContractStatus.Draft ? "bg-secondary" : "bg-warning")">
+                    <span class="badge @(c.Status == GLMS.Shared.Models.ContractStatus.Active ? "bg-success" :
+                                                                                             c.Status == GLMS.Shared.Models.ContractStatus.Expired ? "bg-danger" :
+                                                                                             c.Status == GLMS.Shared.Models.ContractStatus.Draft ? "bg-secondary" : "bg-warning")">
                         @c.Status
                     </span>
                 </td>

@@ -1,6 +1,6 @@
 ﻿using GLMS.API.Data;
-using GLMS.API.Models;
-using GLMS.API.Models.DTOs;
+using GLMS.Shared.Models;
+using GLMS.Shared.Models.DTOs;
 using GLMS.API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

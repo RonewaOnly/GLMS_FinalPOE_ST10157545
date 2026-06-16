@@ -1,4 +1,4 @@
-﻿@model GLMS.Web.Models.LoginRequest
+﻿@model GLMS.Shared.Models.DTOs.LoginRequest
 @{
     ViewData["Title"] = "Login";
     Layout = null;
@@ -20,7 +20,9 @@
         </div>
         <div class="card-body p-4">
             <h5 class="mb-4 text-center">Sign In</h5>
-            <form asp-action="Login" method="post">
+            <form asp-controller="Auth" asp-action="Login" method="post">
+                @Html.AntiForgeryToken()
+
                 <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small"></div>
                 <div class="mb-3">
                     <label asp-for="Username" class="form-label fw-semibold">Username</label>

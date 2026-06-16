@@ -1,13 +1,16 @@
-﻿using global::GLMS.API.Models;
+﻿using GLMS.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 namespace GLMS.API.Data
 {
 
         public class ApplicationDbAPIContext : DbContext
         {
-            public ApplicationDbAPIContext(DbContextOptions<ApplicationDbAPIContext> options) : base(options) { }
+        public ApplicationDbAPIContext(DbContextOptions<ApplicationDbAPIContext> options)
+            : base(options)
+        {
+        }
 
-            public DbSet<Client> Clients => Set<Client>();
+        public DbSet<Client> Clients => Set<Client>();
             public DbSet<Contract> Contracts => Set<Contract>();
             public DbSet<ServiceRequest> ServiceRequests => Set<ServiceRequest>();
             public DbSet<AppUser> Users => Set<AppUser>();

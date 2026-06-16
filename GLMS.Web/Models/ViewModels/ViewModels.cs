@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc.Rendering;
+﻿using GLMS.Shared.Models;//Models for shared entities like Contract, ServiceRequest, etc.
+using GLMS.Shared.Models.DTOs;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
 
 namespace GLMS.Web.Models.ViewModels

@@ -2,10 +2,10 @@
 
 #nullable disable
 
-namespace GLMS.Web.Migrations
+namespace GLMS.API.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreationGLMSfromDB : Migration
+    public partial class APICreation : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

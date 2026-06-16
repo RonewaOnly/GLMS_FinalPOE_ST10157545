@@ -1,4 +1,4 @@
-﻿using GLMS.API.Models.DTOs;
+﻿using GLMS.Shared.Models.DTOs;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;

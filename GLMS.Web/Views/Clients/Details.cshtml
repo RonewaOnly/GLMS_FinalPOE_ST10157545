@@ -1,4 +1,4 @@
-﻿@model GLMS.Web.Models.Client
+﻿@model GLMS.Shared.Models.Client
 @{
     ViewData["Title"] = "Client Details";
 }
@@ -47,9 +47,9 @@
         {
             <tr>
                 <td>
-                    <span class="badge @(c.Status == GLMS.Web.Models.ContractStatus.Active ? "bg-success" :
-                                                                                             c.Status == GLMS.Web.Models.ContractStatus.Expired ? "bg-danger" :
-                                                                                             c.Status == GLMS.Web.Models.ContractStatus.Draft ? "bg-secondary" : "bg-warning")">
+                    <span class="badge @(c.Status == GLMS.Shared.Models.ContractStatus.Active ? "bg-success" :
+                                                                                             c.Status == GLMS.Shared.Models.ContractStatus.Expired ? "bg-danger" :
+                                                                                             c.Status == GLMS.Shared.Models.ContractStatus.Draft ? "bg-secondary" : "bg-warning")">
                         @c.Status
                     </span>
                 </td>

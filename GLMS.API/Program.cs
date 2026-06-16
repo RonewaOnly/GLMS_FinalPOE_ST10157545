@@ -8,18 +8,15 @@ using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ════════════════════════════════════════════════════════════════════════════
-//  CONTROLLERS + JSON
-// ════════════════════════════════════════════════════════════════════════════
+#region Controllers
 builder.Services.AddControllers()
-    .AddJsonOptions(o => o.JsonSerializerOptions.PropertyNamingPolicy = null); // PascalCase JSON
+    .AddJsonOptions(o =>
+    {
+        o.JsonSerializerOptions.PropertyNamingPolicy = null; // PascalCase
+    });
+#endregion
 
-// ════════════════════════════════════════════════════════════════════════════
-//  SWAGGER / OPENAPI
-//  Requires the "Swashbuckle.AspNetCore" NuGet package — if you see errors like
-//  "Microsoft.OpenApi.Models not found", run:
-//    dotnet add package Swashbuckle.AspNetCore --version 6.5.0
-// ════════════════════════════════════════════════════════════════════════════
+#region Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -27,19 +24,18 @@ builder.Services.AddSwaggerGen(c =>
     {
         Title = "GLMS API",
         Version = "v1",
-        Description = "Global Logistics Management System — Web API (Part 3)"
+        Description = "Global Logistics Management System API"
     });
 
-    // JWT bearer auth support in Swagger UI
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
         Type = SecuritySchemeType.Http,
         Scheme = "bearer",
         BearerFormat = "JWT",
-        In = ParameterLocation.Header,
-        Description = "Enter your JWT token (no 'Bearer ' prefix needed)."
+        In = ParameterLocation.Header
     });
+
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
@@ -48,126 +44,114 @@ builder.Services.AddSwaggerGen(c =>
                 Reference = new OpenApiReference
                 {
                     Type = ReferenceType.SecurityScheme,
-                    Id   = "Bearer"
+                    Id = "Bearer"
                 }
             },
             Array.Empty<string>()
         }
     });
 
-    // Include XML doc comments for richer Swagger descriptions (optional)
-    var xmlPath = Path.Combine(AppContext.BaseDirectory, "GLMS.Api.xml");
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, "GLMS.API.xml");
     if (File.Exists(xmlPath))
         c.IncludeXmlComments(xmlPath);
 });
+#endregion
 
-//  DATABASE — SQL Server via EF Core
+#region Database
 builder.Services.AddDbContext<ApplicationDbAPIContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection"),
         sql => sql.EnableRetryOnFailure(3)));
+#endregion
 
-//  JWT AUTHENTICATION
-var jwtKey = builder.Configuration["Jwt:Key"]
-    ?? throw new InvalidOperationException("Jwt:Key is not configured in appsettings.json.");
+#region JWT Configuration
+var jwtKey = builder.Configuration["Jwt:Key"];
+var jwtIssuer = builder.Configuration["Jwt:Issuer"];
+var jwtAudience = builder.Configuration["Jwt:Audience"];
 
-builder.Services
-    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(opts =>
+if (string.IsNullOrWhiteSpace(jwtKey))
+    throw new InvalidOperationException("Jwt:Key is missing");
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
     {
-        opts.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
-            ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
-        };
-    });
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+
+        ValidIssuer = jwtIssuer,
+        ValidAudience = jwtAudience,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+    };
+});
+#endregion
 
 builder.Services.AddAuthorization();
 
-//  APPLICATION SERVICES
+#region Services
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IFileService, FileService>();
+#endregion
 
-builder.Services.AddHttpClient<ICurrencyService, CurrencyService>(c =>
+#region CORS
+builder.Services.AddCors(options =>
 {
-    c.Timeout = TimeSpan.FromSeconds(10);
-    c.DefaultRequestHeaders.Add("Accept", "application/json");
+    options.AddPolicy("MvcFrontend", policy =>
+    {
+        policy.WithOrigins(
+                "http://localhost:7253",
+                "https://localhost:7253"
+            )
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
 });
+#endregion
 
-
-//  CORS — allow the MVC frontend container/dev server to call this API
-builder.Services.AddCors(o => o.AddPolicy("MvcFrontend", policy =>
-{
-    policy
-        .WithOrigins(
-            "http://localhost:5000",
-            "https://localhost:5001",
-            "http://glms-frontend-web",
-            "https://glms-frontend-web")
-        .AllowAnyHeader()
-        .AllowAnyMethod()
-        .AllowCredentials();
-}));
-
-//  FILE UPLOAD SIZE LIMIT (10 MB — for signed agreement PDFs)
+#region Upload Limit
 builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(o =>
-    o.MultipartBodyLengthLimit = 10 * 1024 * 1024);
+{
+    o.MultipartBodyLengthLimit = 10 * 1024 * 1024;
+});
+#endregion
 
-//  BUILD APP
 var app = builder.Build();
 
-//  Middleware pipeline
-if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Docker")
+#region Middleware Pipeline
+
+if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "GLMS API v1");
-        c.RoutePrefix = string.Empty; // Swagger UI served at root "/"
-    });
+    app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
-app.UseStaticFiles();
+//app.UseHttpsRedirection();
+
+app.UseRouting(); // 🔴 important explicit routing
+
 app.UseCors("MvcFrontend");
+
 app.UseAuthentication();
 app.UseAuthorization();
+
 app.MapControllers();
 
-// 
-//  AUTO-APPLY EF CORE MIGRATIONS ON STARTUP
-//  Retries because in Docker the SQL Server container may not be ready yet.
-// 
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbAPIContext>();
-    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+#endregion
 
-    const int maxRetries = 10;
-    for (var attempt = 1; attempt <= maxRetries; attempt++)
-    {
-        try
-        {
-            db.Database.Migrate();
-            logger.LogInformation("Database migration applied successfully.");
-            break;
-        }
-        catch (Exception ex) when (attempt < maxRetries)
-        {
-            logger.LogWarning(ex,
-                "Migration attempt {Attempt}/{Max} failed. Retrying in 3s...",
-                attempt, maxRetries);
-            Thread.Sleep(3000);
-        }
-    }
+#region Auto Migration (SAFE VERSION)
+if (app.Environment.IsDevelopment())
+{
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbAPIContext>();
+    db.Database.Migrate();
 }
+#endregion
 
 app.Run();
+Console.WriteLine("API Connection: " + builder.Configuration.GetConnectionString("DefaultConnection"));
 
-// Required so WebApplicationFactory<Program> works in integration tests
 public partial class Program { }

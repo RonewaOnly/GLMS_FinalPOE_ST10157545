@@ -2,9 +2,9 @@
   <Folder Name="/Solution Items/">
     <File Path="../../../OneDrive/Desktop/POE_PROJ_TODO/GLMS_Part3/GLMS_Part3/.env" />
     <File Path="../../../OneDrive/Desktop/POE_PROJ_TODO/GLMS_Part3/GLMS_Part3/DatabaseMigrations.sql" />
-    <File Path="docker-compose.yml" />
   </Folder>
   <Project Path="GLMS.API/GLMS.API.csproj" />
+  <Project Path="GLMS.Shared/GLMS.Shared.csproj" Id="6f1bc25a-280e-4f3f-8e34-ed29b197edd0" />
   <Project Path="GLMS.TEST/GLMS.TEST.csproj" />
   <Project Path="GLMS.Web/GLMS.Web.csproj" />
 </Solution>

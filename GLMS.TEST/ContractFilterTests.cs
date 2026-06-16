@@ -1,5 +1,5 @@
-﻿using GLMS.Web.Data;
-using GLMS.Web.Models;
+﻿using GLMS.API.Data;
+using GLMS.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -12,13 +12,13 @@ namespace GLMS.TEST
 {
     public class ContractFilterTests : IDisposable
     {
-        private readonly ApplicationDbContext _db;
+        private readonly ApplicationDbAPIContext _db;
         public ContractFilterTests()
         {
-            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            var options = new DbContextOptionsBuilder<ApplicationDbAPIContext>()
                 .UseInMemoryDatabase(Guid.NewGuid().ToString())
                 .Options;
-            _db = new ApplicationDbContext(options);
+            _db = new ApplicationDbAPIContext(options);
             // Seed test data (no seed data from OnModelCreating in InMemory)
             _db.Clients.AddRange(
                 new Client { Id = 10, Name = "TestCo", ContractDetails = "Test", Region = "ZA", CreatedOn = DateTime.UtcNow },

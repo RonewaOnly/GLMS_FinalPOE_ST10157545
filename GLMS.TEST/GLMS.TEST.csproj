@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\GLMS.API\GLMS.API.csproj" />
+    <ProjectReference Include="..\GLMS.Shared\GLMS.Shared.csproj" />
     <ProjectReference Include="..\GLMS.Web\GLMS.Web.csproj" />
   </ItemGroup>
 

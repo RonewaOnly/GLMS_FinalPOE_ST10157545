@@ -1,33 +1,30 @@
-using GLMS.Web.Data;
+using GLMS.Web.Controllers;
 using GLMS.Web.Services;
-
-using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.Mvc.ApplicationParts;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ========================================
-// Add Services to the Container
-// ========================================
+#region MVC
+//builder.Services.AddControllersWithViews();
+//builder.Services
+//    .AddControllersWithViews()
+//    .AddApplicationPart(typeof(HomeController).Assembly)
+//    .AddControllersAsServices();
+builder.Services.AddControllersWithViews()
+    .AddRazorRuntimeCompilation()
+    .ConfigureApplicationPartManager(apm =>
+    {
+        apm.ApplicationParts.Clear();
+        apm.ApplicationParts.Add(new AssemblyPart(typeof(HomeController).Assembly));
+    });
 
-// MVC
-builder.Services.AddControllersWithViews();
 
-// ========================================
-// Database Configuration
-// ========================================
 
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-options.UseSqlServer(
-builder.Configuration.GetConnectionString("DefaultConnection"),
-sqlOptions =>
-{
-    sqlOptions.EnableRetryOnFailure(3);
-}));
 
-// ========================================
-// Session Configuration
-// ========================================
+#endregion
 
+#region Session Configuration
 builder.Services.AddDistributedMemoryCache();
 
 builder.Services.AddSession(options =>
@@ -36,61 +33,44 @@ builder.Services.AddSession(options =>
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
+#endregion
 
 builder.Services.AddHttpContextAccessor();
 
-// ========================================
-// Application Services
-// ========================================
-
+#region Application Services
 builder.Services.AddScoped<IFileService, FileService>();
+#endregion
 
-// ========================================
-// HTTP Clients
-// ========================================
-
-// API Client
+#region API Http Client
 builder.Services.AddHttpClient<ApiClient>(client =>
 {
     var apiUrl = builder.Configuration["ApiBaseUrl"]
-    ?? "https://localhost:7291";
+        ?? "https://localhost:5291"; // Default to local API if not configured
 
-client.BaseAddress = new Uri(apiUrl);
+    client.BaseAddress = new Uri(apiUrl);
     client.Timeout = TimeSpan.FromSeconds(30);
-
     client.DefaultRequestHeaders.Add("Accept", "application/json");
-
 });
+#endregion
 
-// Currency Service Client
+#region Currency Service Client
 builder.Services.AddHttpClient<ICurrencyService, CurrencyService>(client =>
 {
     client.Timeout = TimeSpan.FromSeconds(10);
-
-client.DefaultRequestHeaders.Add("Accept", "application/json");
-
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
+#endregion
 
-// ========================================
-// File Upload Configuration
-// ========================================
-
-builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
+#region File Upload Limits
+builder.Services.Configure<FormOptions>(options =>
 {
-    // 10 MB upload limit
-    options.MultipartBodyLengthLimit = 10 * 1024 * 1024;
+    options.MultipartBodyLengthLimit = 10 * 1024 * 1024; // 10MB
 });
-
-// ========================================
-// Build Application
-// ========================================
+#endregion
 
 var app = builder.Build();
 
-// ========================================
-// Configure HTTP Request Pipeline
-// ========================================
-
+#region HTTP Pipeline
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -98,7 +78,6 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseStaticFiles();
 
 app.UseRouting();
@@ -106,36 +85,12 @@ app.UseRouting();
 app.UseSession();
 
 app.UseAuthorization();
+#endregion
 
-// ========================================
-// Route Configuration
-// ========================================
-
+#region Routing
 app.MapControllerRoute(
-name: "default",
-pattern: "{controller=Home}/{action=Index}/{id?}");
-
-// ========================================
-// Auto Apply Migrations
-// ========================================
-
-using (var scope = app.Services.CreateScope())
-{
-    try
-    {
-        var db = scope.ServiceProvider
-        .GetRequiredService<ApplicationDbContext>();
-
-    db.Database.Migrate();
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Database migration error: {ex.Message}");
-    }
-}
-
-// ========================================
-// Run Application
-// ========================================
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
+#endregion
 
 app.Run();

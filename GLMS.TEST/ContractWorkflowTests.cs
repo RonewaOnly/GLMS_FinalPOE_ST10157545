@@ -1,4 +1,4 @@
-﻿using GLMS.Web.Models;
+﻿using GLMS.Shared.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;

@@ -1,5 +1,4 @@
-using GLMS.API.Models.DTOs;
-using GLMS.Web.Data;
+using GLMS.Shared.Models.DTOs;
 using GLMS.Web.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;

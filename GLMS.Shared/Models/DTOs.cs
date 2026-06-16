@@ -1,5 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
-namespace GLMS.API.Models.DTOs
+namespace GLMS.Shared.Models.DTOs
 {
 
         public class LoginRequest { [Required] public string Username { get; set; } = ""; [Required] public string Password { get; set; } = ""; }

@@ -1,4 +1,4 @@
-﻿using GLMS.Web.Data;
+﻿using GLMS.API.Data;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -18,9 +18,9 @@ namespace GLMS.TEST
         {
             builder.ConfigureServices(services =>
             {
-                services.RemoveAll<DbContextOptions<ApplicationDbContext>>();
-                services.RemoveAll<ApplicationDbContext>();
-                services.AddDbContext<ApplicationDbContext>(opts =>
+                services.RemoveAll<DbContextOptions<ApplicationDbAPIContext>>();
+                services.RemoveAll<ApplicationDbAPIContext>();
+                services.AddDbContext<ApplicationDbAPIContext>(opts =>
                     opts.UseInMemoryDatabase("GlmsTestDb_" + Guid.NewGuid()));
             });
             builder.UseEnvironment("Development");

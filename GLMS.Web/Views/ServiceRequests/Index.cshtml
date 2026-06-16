@@ -1,4 +1,4 @@
-﻿@model IEnumerable<GLMS.Web.Models.ServiceRequest>
+﻿@model IEnumerable<GLMS.Shared.Models.ServiceRequest>
 @{
     ViewData["Title"] = "Service Requests";
 }
@@ -36,9 +36,9 @@
                 <td class="text-end fw-semibold">R @sr.CostZar.ToString("N2")</td>
                 <td class="text-end text-muted small">@sr.ExchangeRateUsed.ToString("N4")</td>
                 <td>
-                    <span class="badge @(sr.Status == GLMS.Web.Models.ServiceRequestStatus.Completed ? "bg-success" :
-                                                                                              sr.Status == GLMS.Web.Models.ServiceRequestStatus.Cancelled ? "bg-danger" :
-                                                                                              sr.Status == GLMS.Web.Models.ServiceRequestStatus.InProgress ? "bg-primary" : "bg-warning text-dark")">
+                    <span class="badge @(sr.Status == GLMS.Shared.Models.ServiceRequestStatus.Completed ? "bg-success" :
+                                                                                              sr.Status == GLMS.Shared.Models.ServiceRequestStatus.Cancelled ? "bg-danger" :
+                                                                                              sr.Status == GLMS.Shared.Models.ServiceRequestStatus.InProgress ? "bg-primary" : "bg-warning text-dark")">
                         @sr.Status
                     </span>
                 </td>

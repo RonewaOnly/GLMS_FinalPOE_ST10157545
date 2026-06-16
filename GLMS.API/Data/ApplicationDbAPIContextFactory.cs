@@ -16,7 +16,9 @@ namespace GLMS.API.Data
             var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbAPIContext>();
 
             optionsBuilder.UseSqlServer(
-                config.GetConnectionString("DefaultConnection"));
+                config.GetConnectionString("DefaultConnection"),
+                b => b.MigrationsAssembly("GLMS.API")
+                );
 
             return new ApplicationDbAPIContext(optionsBuilder.Options);
         }

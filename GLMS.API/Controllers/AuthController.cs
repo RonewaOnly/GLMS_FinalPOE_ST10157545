@@ -1,5 +1,5 @@
 ﻿using GLMS.API.Data;
-using GLMS.API.Models.DTOs;
+using GLMS.Shared.Models.DTOs;
 using GLMS.API.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
