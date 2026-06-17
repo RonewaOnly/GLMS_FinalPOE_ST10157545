@@ -33,8 +33,30 @@ namespace GLMS.Web.Controllers
         {
             var dto = await _api.GetAsync<ContractDto>($"api/contracts/{id}");
             if (dto == null) return NotFound();
+            var model = new Contract
+            {
+                Id = dto.Id,
+                ClientId = dto.ClientId,
+                Client = new Client { Name = dto.ClientName },
+                StartDate = dto.StartDate,
+                EndDate = dto.EndDate,
+                ServiceLevel = dto.ServiceLevel,
+                Status = Enum.Parse<ContractStatus>(dto.Status),
+                SignedAgreementPath = dto.SignedAgreementPath,
+                SignedAgreementFileName = dto.SignedAgreementFileName,
+                ServiceRequests = dto.ServiceRequests.Select(sr => new ServiceRequest
+                {
+                    Id = sr.Id,
+                    ContractId = sr.ContractId,
+                    Description = sr.Description,
+                    CostUsd = sr.CostUsd,
+                    CostZar = sr.CostZar,
+                    ExchangeRateUsed = sr.ExchangeRateUsed,
+                    Status = Enum.Parse<ServiceRequestStatus>(sr.Status),
+                    CreatedOn = sr.CreatedOn
+                }).ToList()
+            };
 
-            var model = ContractMapper.ToModel(dto);
             return View(model);
         }
         [HttpGet]
@@ -153,13 +175,23 @@ namespace GLMS.Web.Controllers
             var vm = ContractMapper.ToModel(dto);
             return View(vm);
         }
-        [HttpPost, ActionName("Delete"), ValidateAntiForgeryToken]
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            await _api.DeleteAsync($"api/contracts/{id}");
-            TempData["Success"] = "Contract deleted.";
+            var ok = await _api.DeleteAsync($"api/contracts/{id}");
+
+            if (!ok)
+            {
+                TempData["Error"] = "Unable to delete contract.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            TempData["Success"] = "Contract deleted successfully.";
             return RedirectToAction(nameof(Index));
+
         }
+
 
         public async Task<IActionResult> Download(int id)
         {

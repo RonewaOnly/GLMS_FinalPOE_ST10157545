@@ -15,7 +15,17 @@ namespace GLMS.Web.Mapping
                 ContractDetails = dto.ContractDetails,
                 CreatedOn = dto.CreatedOn,
                 // Contracts is NOT mapped because ClientDto does not contain it
-                Contracts = new List<Contract>() // empty list so your view doesn't crash
+                Contracts = dto.Contracts.Select(ct => new Contract
+                {
+                    Id = ct.Id,
+                    ClientId = ct.ClientId,
+                    StartDate = ct.StartDate,
+                    EndDate = ct.EndDate,
+                    Status = Enum.Parse<ContractStatus>(ct.Status),
+                    ServiceLevel = ct.ServiceLevel,
+                    CreatedOn = ct.CreatedOn
+                }).ToList()
+
             };
         }
     }

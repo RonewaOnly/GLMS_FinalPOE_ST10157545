@@ -19,7 +19,27 @@ namespace GLMS.API.Controllers
             [HttpGet, AllowAnonymous]
             public async Task<IActionResult> GetAll() =>
                 Ok(await _db.Clients.Include(c => c.Contracts).OrderBy(c => c.Name)
-                    .Select(c => new ClientDto { Id = c.Id, Name = c.Name, ContractDetails = c.ContractDetails, Region = c.Region, CreatedOn = c.CreatedOn, ContractCount = c.Contracts.Count })
+                .Select(c => new ClientDto
+                {
+                    Id = c.Id,
+                    Name = c.Name,
+                    ContractDetails = c.ContractDetails,
+                    Region = c.Region,
+                    CreatedOn = c.CreatedOn,
+
+                    Contracts = c.Contracts.Select(ct => new ContractDto
+                    {
+                        Id = ct.Id,
+                        ClientId = ct.ClientId,
+                        ClientName = c.Name,
+                        StartDate = ct.StartDate,
+                        EndDate = ct.EndDate,
+                        Status = ct.Status.ToString(),
+                        ServiceLevel = ct.ServiceLevel,
+                        CreatedOn = ct.CreatedOn,
+                        HasAgreement = !string.IsNullOrEmpty(ct.SignedAgreementPath)
+                    }).ToList()
+                })
                     .ToListAsync());
 
             /// <summary>Get client by ID.</summary>

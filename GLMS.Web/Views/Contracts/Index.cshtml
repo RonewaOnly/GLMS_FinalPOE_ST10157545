@@ -71,7 +71,7 @@
                 </td>
                 <td>@c.ServiceLevel</td>
                 <td>
-                    @if (!string.IsNullOrEmpty(c.SignedAgreementPath))
+                    @if (!string.IsNullOrEmpty(c.SignedAgreementFileName))
                     {
                         <a asp-action="Download" asp-route-id="@c.Id"
                            class="btn btn-sm btn-outline-dark">⬇ PDF</a>

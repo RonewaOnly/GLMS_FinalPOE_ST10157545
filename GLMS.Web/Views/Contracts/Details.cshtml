@@ -1,4 +1,11 @@
 ﻿@model GLMS.Shared.Models.Contract
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["Error"]
+    </div>
+}
+
 @{
     ViewData["Title"] = "Contract Details";
     var statusClass = Model.Status == GLMS.Shared.Models.ContractStatus.Active ? "bg-success" :

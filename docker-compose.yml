@@ -86,9 +86,7 @@ services:
       - "8080:8080"
     volumes:
       - agreements_data:/app/wwwroot/uploads/agreements
-    depends_on:
-      sqlserver:
-        condition: service_healthy
+
     networks:
       - glms-network
     healthcheck:
@@ -118,9 +116,6 @@ services:
       ApiBaseUrl:             "http://glms.api:8080"
     ports:
       - "5000:5000"
-    depends_on:
-      glms.api:
-        condition: service_healthy
     networks:
       - glms-network
 
@@ -146,9 +141,6 @@ services:
         Password=YourStrong!Passw0rd;
         TrustServerCertificate=True;
         MultipleActiveResultSets=True;
-    depends_on:
-      glms.api:
-        condition: service_healthy
     networks:
       - glms-network
     restart: "no"

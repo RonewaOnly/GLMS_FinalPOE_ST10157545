@@ -13,14 +13,24 @@ namespace GLMS.Web.Mapping
             {
                 Id = dto.Id,
                 ClientId = dto.ClientId,
-                ServiceLevel = dto.ServiceLevel,
-                Status = Enum.Parse<ContractStatus>(dto.Status),
+                Client = new Client { Name = dto.ClientName },
                 StartDate = dto.StartDate,
                 EndDate = dto.EndDate,
-                CreatedOn = dto.CreatedOn,
+                Status = Enum.Parse<ContractStatus>(dto.Status),
+                ServiceLevel = dto.ServiceLevel,
                 SignedAgreementFileName = dto.SignedAgreementFileName,
-                SignedAgreementPath = dto.SignedAgreementFileName, // adjust if needed
-                
+                CreatedOn = dto.CreatedOn,
+                ServiceRequests = dto.ServiceRequests.Select(sr => new ServiceRequest
+                {
+                    Id = sr.Id,
+                    ContractId = sr.ContractId,
+                    Description = sr.Description,
+                    CostUsd = sr.CostUsd,
+                    CostZar = sr.CostZar,
+                    ExchangeRateUsed = sr.ExchangeRateUsed,
+                    Status = Enum.Parse<ServiceRequestStatus>(sr.Status),
+                    CreatedOn = sr.CreatedOn
+                }).ToList()
             };
         }
 
@@ -38,5 +48,7 @@ namespace GLMS.Web.Mapping
                 ClientList = clients
             };
         }
+
+
     }
 }

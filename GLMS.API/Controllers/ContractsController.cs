@@ -108,9 +108,20 @@ namespace GLMS.API.Controllers
             [HttpDelete("{id:int}")]
             public async Task<IActionResult> Delete(int id)
             {
-                var contract = await _db.Contracts.FindAsync(id);
-                if (contract == null) return NotFound();
-                if (!string.IsNullOrEmpty(contract.SignedAgreementPath)) _files.DeleteAgreement(contract.SignedAgreementPath);
+            var contract = await _db.Contracts
+               .Include(c => c.ServiceRequests)
+               .FirstOrDefaultAsync(c => c.Id == id);   
+            if (contract == null) return NotFound();
+
+            if (contract.ServiceRequests.Any())
+            {
+                return BadRequest(new
+                {
+                    message = "Cannot delete contract because it has service requests."
+                });
+            }
+
+            if (!string.IsNullOrEmpty(contract.SignedAgreementPath)) _files.DeleteAgreement(contract.SignedAgreementPath);
                 _db.Contracts.Remove(contract);
                 await _db.SaveChangesAsync();
                 return NoContent();

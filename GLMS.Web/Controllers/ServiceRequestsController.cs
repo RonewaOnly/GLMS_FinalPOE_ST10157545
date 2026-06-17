@@ -73,6 +73,72 @@ namespace GLMS.Web.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        // GET: /ServiceRequests/Edit/5
+        [HttpGet]
+        public async Task<IActionResult> Edit(int id)
+        {
+            var dto = await _api.GetAsync<ServiceRequestDto>($"api/servicerequests/{id}");
+            if (dto == null) return NotFound();
+
+            var rate = await _api.GetAsync<CurrencyRateResponse>("api/currency/rate");
+            var contracts = await _api.GetAsync<List<ContractDto>>("api/contracts?status=Active") ?? new();
+
+            var vm = new ServiceRequestFormViewModel
+            {
+                Id = dto.Id,
+                ContractId = dto.ContractId,
+                Description = dto.Description,
+                CostUsd = dto.CostUsd,
+                ExchangeRate = dto.ExchangeRateUsed,
+                 Status = Enum.TryParse<ServiceRequestStatus>(dto.Status, out var s)
+    ? s
+    : ServiceRequestStatus.Pending,
+
+
+                ContractList = contracts.Select(c => new SelectListItem
+                {
+                    Value = c.Id.ToString(),
+                    Text = $"{c.ClientName} (#{c.Id})"
+                })
+            };
+
+            return View(vm);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, ServiceRequestFormViewModel vm)
+        {
+            if (id != vm.Id) return BadRequest();
+
+            if (!ModelState.IsValid)
+            {
+                vm.ContractList = await GetActiveContractSelectListAsync();
+                return View(vm);
+            }
+
+            var (ok, err) = await _api.PutAsync($"api/servicerequests/{id}", new
+            {
+                vm.ContractId,
+                vm.Description,
+                vm.CostUsd,
+                vm.ExchangeRate,
+                Status = vm.Status.ToString() // ⭐ FIXED
+            });
+
+            if (!ok)
+            {
+                ModelState.AddModelError("", err ?? "Failed to update service request.");
+                vm.ContractList = await GetActiveContractSelectListAsync();
+                return View(vm);
+            }
+
+            TempData["Success"] = "Service request updated.";
+            return RedirectToAction(nameof(Index));
+        }
+
+
+
         [HttpGet] public async Task<IActionResult> Delete(int id) { var sr = await _api.GetAsync<ServiceRequestDto>($"api/servicerequests/{id}"); if (sr == null) return NotFound(); var model = ServiceRequestMapper.ToModel(sr);
             return View(model);
         }
@@ -80,6 +146,17 @@ namespace GLMS.Web.Controllers
         public async Task<IActionResult> DeleteConfirmed(int id) { await _api.DeleteAsync($"api/servicerequests/{id}"); TempData["Success"] = "Deleted."; return RedirectToAction(nameof(Index)); }
         [HttpGet] public async Task<IActionResult> GetRate() { var r = await _api.GetAsync<CurrencyRateResponse>("api/currency/rate"); return Json(new { rate = r?.Rate ?? 18.50m }); }
         private async Task PopulateViewBag(ServiceRequestFormViewModel vm) { var r = await _api.GetAsync<CurrencyRateResponse>("api/currency/rate"); ViewBag.Rate = r?.Rate ?? 18.50m; ViewBag.Contracts = await _api.GetAsync<List<ContractDto>>("api/contracts?status=Active") ?? new(); }
+
+        private async Task<IEnumerable<SelectListItem>> GetActiveContractSelectListAsync()
+        {
+            var contracts = await _api.GetAsync<List<ContractDto>>("api/contracts?status=Active") ?? new();
+
+            return contracts.Select(c => new SelectListItem
+            {
+                Value = c.Id.ToString(),
+                Text = $"{c.ClientName} (#{c.Id})"
+            });
+        }
 
     }
 }

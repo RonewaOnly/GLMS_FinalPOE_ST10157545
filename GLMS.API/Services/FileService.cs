@@ -13,7 +13,7 @@
             private static readonly string[] AllowedExt = { ".pdf" };
             private static readonly string[] AllowedMime = { "application/pdf" };
             private const long MaxBytes = 10 * 1024 * 1024;
-            private const string Folder = "uploads/agreements";
+            private const string Folder = "uploads/agreement";
 
             public FileService(IWebHostEnvironment env, ILogger<FileService> logger) { _env = env; _logger = logger; }
 

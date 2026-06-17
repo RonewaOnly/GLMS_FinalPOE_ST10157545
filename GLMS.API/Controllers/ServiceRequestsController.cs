@@ -73,8 +73,53 @@ namespace GLMS.API.Controllers
                 await _db.SaveChangesAsync();
                 return NoContent();
             }
+        /// <summary>Update a service request.</summary>
+        [HttpPut("{id:int}")]
+        public async Task<IActionResult> Update(int id, [FromBody] UpdateServiceRequestRequest req)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-            private static ServiceRequestDto ToDto(ServiceRequest sr) => new() { Id = sr.Id, ContractId = sr.ContractId, ClientName = sr.Contract?.Client?.Name ?? string.Empty, Description = sr.Description, CostUsd = sr.CostUsd, CostZar = sr.CostZar, ExchangeRateUsed = sr.ExchangeRateUsed, Status = sr.Status.ToString(), CreatedOn = sr.CreatedOn };
+            var sr = await _db.ServiceRequests
+                .Include(x => x.Contract)
+                .ThenInclude(c => c!.Client)
+                .FirstOrDefaultAsync(x => x.Id == id);
+
+            if (sr == null)
+                return NotFound();
+
+            // Validate contract
+            var contract = await _db.Contracts.FindAsync(req.ContractId);
+            if (contract == null)
+                return BadRequest(new { message = "Contract not found." });
+
+            // Validate status
+            if (!Enum.TryParse<ServiceRequestStatus>(req.Status, true, out var newStatus))
+                return BadRequest(new { message = "Invalid status." });
+
+            // Determine exchange rate
+            var rate = req.ExchangeRate > 0
+                ? req.ExchangeRate
+                : await _fx.GetUsdToZarRateAsync();
+
+            // Recalculate ZAR
+            var costZar = _fx.ConvertUsdToZar(req.CostUsd, rate);
+
+            // Apply updates
+            sr.ContractId = req.ContractId;
+            sr.Description = req.Description;
+            sr.CostUsd = req.CostUsd;
+            sr.CostZar = costZar;
+            sr.ExchangeRateUsed = rate;
+            sr.Status = newStatus;
+
+            await _db.SaveChangesAsync();
+
+            return Ok(ToDto(sr));
+        }
+
+
+        private static ServiceRequestDto ToDto(ServiceRequest sr) => new() { Id = sr.Id, ContractId = sr.ContractId, ClientName = sr.Contract?.Client?.Name ?? string.Empty, Description = sr.Description, CostUsd = sr.CostUsd, CostZar = sr.CostZar, ExchangeRateUsed = sr.ExchangeRateUsed, Status = sr.Status.ToString(), CreatedOn = sr.CreatedOn };
         }
 
         /// <summary>Live currency exchange rates.</summary>
